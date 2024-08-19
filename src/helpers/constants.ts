@@ -1,8 +1,3 @@
-import { config } from "dotenv";
-
-// Load environment variables from the .env file
-config();
-
 export enum StatusCodes {
   OK = 200,
   CREATED = 201,

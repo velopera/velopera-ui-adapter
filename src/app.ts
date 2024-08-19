@@ -1,60 +1,43 @@
-import cookieParser from "cookie-parser";
-import dotenv from "dotenv";
+import { config } from "dotenv";
 import express from "express";
-import http from "http";
 import { logger } from "shared-data";
-import { ApiRoutes } from "./api/api";
+import { Api } from "./api/api";
 import { MqttController } from "./controllers/MqttController";
 import { Database } from "./database/db";
 
-// Load environment variables
-dotenv.config();
+// Load environment variables from .env file
+config();
 
 const app: express.Application = express();
-const server = http.createServer(app);
 
-// Middleware to parse JSON body
-app.use(express.json());
-
-// Middleware to parse Cookie
-app.use(cookieParser());
-
-// Use the centralized API routes
-const apiRoutes = new ApiRoutes();
-app.use("/ui/api", apiRoutes.getRouter());
-
-// Main function to initialize the server and database connection
 export class Main {
+  api: Api | undefined;
   async run() {
     logger.info("Main run...");
 
     try {
-      // Initialize database and fetch device data
+      // Initialize database and populate device cache
       const db = new Database();
       logger.debug("Populating device cache");
       const devices = await db.getDevices();
-      // Log the retrieved devices
-      console.table(devices);
       logger.info(`Devices: ${[...devices]}`);
 
-      // Initialize MQTT controller with fetched devices
+      // Initialize Api
+      this.api = new Api(app);
+
+      // Initialize MQTT controller with fetched devices and uplink server
       new MqttController(devices);
     } catch (error) {
       logger.error("Initialization error:", error);
     }
-
-    // Start the HTTP server and listen on the designated port
-    const PORT = process.env.SERVER_PORT || 9090;
-    server.listen(PORT, () => {
-      logger.info(`Server listening on port ${PORT}`);
-    });
   }
 }
 
+// Create an instance of Main and run it
 const main = new Main();
 
-main.run().catch((e: any) => {
-  logger.error("ERROR::: Main.run() failed: ", e);
+main.run().catch((error: any) => {
+  console.log("ERROR::: Main.run() failed: ", error);
   logger.end();
   process.exit(1);
 });

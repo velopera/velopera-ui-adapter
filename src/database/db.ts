@@ -1,10 +1,6 @@
-import { config } from "dotenv";
 import { createPool, RowDataPacket } from "mysql2/promise";
 import { logger } from "shared-data";
 import { Device } from "../helpers/device";
-
-// Load environment variables from the .env file
-config();
 
 // Class for managing database operations
 export class Database {
@@ -17,6 +13,8 @@ export class Database {
       user: process.env.DB_USER,
       password: process.env.DB_PASS,
       database: process.env.DB_NAME,
+      port: 3306,
+      connectTimeout: 60,
     });
   }
 
@@ -29,10 +27,9 @@ export class Database {
         "SELECT imei, veloId FROM iot_device"
       );
       const deviceMap = new Map<string, Device>();
-      // Populate the map with Device instances
+      // Create a map of devices from the query results
       rows.forEach((row) => {
-        const device = new Device(row.imei, row.veloId);
-        deviceMap.set(row.imei, device);
+        deviceMap.set(row.imei, new Device(row.imei, row.veloId));
       });
       return deviceMap;
     } catch (error) {

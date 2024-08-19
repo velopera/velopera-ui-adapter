@@ -1,3 +1,5 @@
+import { JwtPayload } from "jsonwebtoken";
+
 export interface DeviceStatus {
   imei: string;
   veloId: string;
@@ -6,4 +8,8 @@ export interface DeviceStatus {
 
 export interface DeviceStatusCache {
   [key: string]: DeviceStatus;
+}
+
+export interface DecodedJwtPayload extends JwtPayload {
+  name?: string;
 }

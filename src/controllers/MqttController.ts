@@ -3,8 +3,9 @@ import { Device } from "../helpers/device";
 import { MqttService } from "../services/MqttService";
 import { DeviceStatus, DeviceStatusCache } from "../types/types";
 
-// A map to cache the latest states of devices.
+// Map to cache the latest states of devices.
 let deviceStatusCache: Map<string, any> = new Map<string, any>();
+let deviceLoginCache: Map<string, any> = new Map<string, any>();
 
 export class MqttController {
   private mqttService: MqttService;
@@ -27,15 +28,39 @@ export class MqttController {
 
     // Subscribe to device events and update the cache.
     this.devices.forEach((device, key) => {
-      device.on("deviceStatus", (data) => {
+      device.on("deviceStatus", (statusData) => {
         try {
-          deviceStatusCache.set(key, {
+          const dataToSend = {
             imei: device.imei,
             veloId: device.veloId,
-            statusData: data,
-          });
+            statusData: statusData,
+          };
+
+          deviceStatusCache.set(key, dataToSend);
+          logger.info("Device status received:", statusData);
         } catch (error) {
-          logger.error("Error caching device status:", error);
+          let errorMessage = "An unexpected error occurred.";
+          if (error instanceof Error) {
+            errorMessage = error.message;
+          }
+          logger.error("Error caching device status:", errorMessage);
+        }
+      });
+      device.on("deviceLogin", (loginData) => {
+        try {
+          const dataToSend = {
+            imei: device.imei,
+            veloId: device.veloId,
+            loginData: loginData,
+          };
+          deviceLoginCache.set(key, dataToSend);
+          logger.info("Device Login received:", loginData);
+        } catch (error) {
+          let errorMessage = "An unexpected error occurred.";
+          if (error instanceof Error) {
+            errorMessage = error.message;
+          }
+          logger.error("Error caching device status:", errorMessage);
         }
       });
     });
@@ -59,10 +84,19 @@ export class MqttController {
   }
 }
 
-// Function to return the cached last states of devices.
-export const getCachedMessage = (): DeviceStatusCache => {
+// Function to return the cached last status of devices.
+export const getCachedStatusMessage = (): DeviceStatusCache => {
   let obj = Object.create(null) as DeviceStatusCache;
   for (let [key, value] of deviceStatusCache) {
+    obj[key] = value as DeviceStatus;
+  }
+  return obj;
+};
+
+// Function to return the cached last logins of devices.
+export const getCachedLoginMessage = (): DeviceStatusCache => {
+  let obj = Object.create(null) as DeviceStatusCache;
+  for (let [key, value] of deviceLoginCache) {
     obj[key] = value as DeviceStatus;
   }
   return obj;

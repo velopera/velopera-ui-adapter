@@ -10,9 +10,15 @@ export class Device extends MessageParser {
   }
 
   // Emit an event when parsed data is handled
-  protected handleParsedData(data: any): void {
+  protected handleParsedStatus(data: any): void {
     logger.debug(`||| Emitting Data Event ||| \n${JSON.stringify(data)}`);
     this.eventEmitter.emit("deviceStatus", data);
+  }
+
+  // Emit an event when parsed data is handled
+  protected handleParsedLogin(data: any): void {
+    logger.debug(`||| Emitting Data Event ||| \n${JSON.stringify(data)}`);
+    this.eventEmitter.emit("deviceLogin", data);
   }
 
   // Method to allow external listeners to subscribe to events
