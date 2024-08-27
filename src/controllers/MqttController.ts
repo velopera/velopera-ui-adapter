@@ -1,4 +1,5 @@
 import { logger } from "shared-data";
+import { Api } from "../api/api";
 import { Device } from "../helpers/device";
 import { MqttService } from "../services/MqttService";
 import { DeviceStatus, DeviceStatusCache } from "../types/types";
@@ -10,10 +11,12 @@ let deviceLoginCache: Map<string, any> = new Map<string, any>();
 export class MqttController {
   private mqttService: MqttService;
   private devices: Map<string, Device>;
+  private api: Api;
 
-  constructor(devices: Map<string, Device>) {
+  constructor(devices: Map<string, Device>, api: Api) {
     this.devices = devices;
     this.mqttService = new MqttService();
+    this.api = api;
 
     // Event listeners for MQTT service events.
     this.mqttService.event.on("connected", () => {
@@ -38,6 +41,7 @@ export class MqttController {
 
           deviceStatusCache.set(key, dataToSend);
           logger.info("Device status received:", statusData);
+          this.api.sendStatusUpdate(dataToSend);
         } catch (error) {
           let errorMessage = "An unexpected error occurred.";
           if (error instanceof Error) {
@@ -55,6 +59,7 @@ export class MqttController {
           };
           deviceLoginCache.set(key, dataToSend);
           logger.info("Device Login received:", loginData);
+          this.api.sendLoginUpdate(dataToSend);
         } catch (error) {
           let errorMessage = "An unexpected error occurred.";
           if (error instanceof Error) {

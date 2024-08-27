@@ -26,7 +26,7 @@ export class Main {
       this.api = new Api(app);
 
       // Initialize MQTT controller with fetched devices and uplink server
-      new MqttController(devices);
+      new MqttController(devices, this.api);
     } catch (error) {
       logger.error("Initialization error:", error);
     }

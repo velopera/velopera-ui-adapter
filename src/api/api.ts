@@ -5,6 +5,7 @@ import { Application, Request, Response } from "express";
 import http from "http";
 import jwt from "jsonwebtoken";
 import { logger } from "shared-data";
+import { Server } from "socket.io";
 import {
   getCachedLoginMessage,
   getCachedMessageById,
@@ -18,14 +19,24 @@ const jsonParser = bodyParser.json();
 export class Api {
   private app: Application;
   private server: http.Server;
+  private io: Server;
 
   constructor(app: Application) {
     this.app = app;
     this.server = http.createServer(app);
 
-    this.app.use(cookieParser());
+    this.io = new Server(this.server, {
+      path: "/iot_link/",
+      cors: {
+        origin: process.env.CORS_ORIGIN,
+        methods: ["GET", "POST"],
+        credentials: true,
+      },
+    });
 
+    this.app.use(cookieParser());
     this.createServer();
+    this.setupSocketListeners();
   }
 
   // Helper function to verify JWT
@@ -46,13 +57,7 @@ export class Api {
 
   createServer() {
     // Enable CORS for cross-origin requests
-    this.app.use(
-      cors({
-        origin: process.env.CORS_ORIGIN,
-        methods: ["GET", "POST"],
-        credentials: true,
-      })
-    );
+    this.app.use(cors());
 
     // Login route
     this.app.post(
@@ -190,5 +195,25 @@ export class Api {
     this.server.listen(PORT, () => {
       logger.info(`Server listening on port ${PORT}`);
     });
+  }
+
+  setupSocketListeners() {
+    this.io.on("connection", (socket) => {
+      logger.debug("Client connected:", socket.id);
+
+      socket.on("disconnect", () => {
+        logger.info("Client disconnected:", socket.id);
+      });
+    });
+  }
+
+  sendStatusUpdate(statusData: any) {
+    logger.debug("Sending status update to Socket:", statusData);
+    this.io.emit("statusUpdate", statusData);
+  }
+
+  sendLoginUpdate(loginData: any) {
+    logger.debug("Sending login update to Socket:", loginData);
+    this.io.emit("loginUpdate", loginData);
   }
 }
