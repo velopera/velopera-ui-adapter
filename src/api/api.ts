@@ -63,7 +63,7 @@ export class Api {
     this.app.post(
       `/ui/api/login`,
       jsonParser,
-      (req: Request, res: Response) => {
+      (req: Request, res: Response) : void => {
         const { username, password } = req.body;
 
         if (
@@ -75,29 +75,29 @@ export class Api {
             expiresIn: "1d",
           });
 
-          return res.status(StatusCodes.OK).json({ accessToken });
+          res.status(StatusCodes.OK).json({ accessToken });
         } else {
-          return res
+          res
             .status(StatusCodes.UNAUTHORIZED)
             .send("Username or password is incorrect");
         }
       }
     );
 
-    this.app.post("/ui/api/logout", (_req: Request, res: Response) => {
+    this.app.post("/ui/api/logout", (_req: Request, res: Response) : void => {
       res.clearCookie("Velo.JWT", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
       });
-      return res.status(StatusCodes.OK).send("Logged out successfully");
+      res.status(StatusCodes.OK).send("Logged out successfully");
     });
 
     // Define API endpoint to get the last message for devices
-    this.app.get(`/ui/api/lastStatusMessage`, (req: Request, res: Response) => {
-      const decoded = this.verifyToken(req);
+    this.app.get(`/ui/api/lastStatusMessage`, (req: Request, res: Response) : void => {
+      const decoded = this.verifyToken(req) as DecodedJwtPayload;
 
       if (!decoded) {
-        return res
+        res
           .status(StatusCodes.UNAUTHORIZED)
           .send("Invalid or expired token");
       }
@@ -113,18 +113,18 @@ export class Api {
         res.json(allDevicesStatus);
       } catch (e) {
         logger.error("/Velo AUTH INTERNAL FAILURE [312] " + JSON.stringify(e));
-        return res
+        res
           .status(StatusCodes.INTERNAL_SERVER_ERROR)
           .send("Internal Server Error");
       }
     });
 
     // Define API endpoint to get the last login message for devices
-    this.app.get(`/ui/api/lastLoginMessage`, (req: Request, res: Response) => {
-      const decoded = this.verifyToken(req);
+    this.app.get(`/ui/api/lastLoginMessage`, (req: Request, res: Response) : void => {
+      const decoded = this.verifyToken(req) as DecodedJwtPayload;
 
       if (!decoded) {
-        return res
+        res
           .status(StatusCodes.UNAUTHORIZED)
           .send("Invalid or expired token");
       }
@@ -144,7 +144,7 @@ export class Api {
         }
       } catch (e) {
         logger.error("/Velo AUTH INTERNAL FAILURE [312] " + JSON.stringify(e));
-        return res
+        res
           .status(StatusCodes.INTERNAL_SERVER_ERROR)
           .send("Internal Server Error");
       }
@@ -153,11 +153,11 @@ export class Api {
     // Define API endpoint to get the last message by ID
     this.app.get(
       `/ui/api/lastStatusMessage/:id`,
-      (req: Request, res: Response) => {
-        const decoded = this.verifyToken(req);
+      (req: Request, res: Response) : void => {
+        const decoded = this.verifyToken(req) as DecodedJwtPayload;
 
         if (!decoded) {
-          return res
+          res
             .status(StatusCodes.UNAUTHORIZED)
             .send("Invalid or expired token");
         }
@@ -183,7 +183,7 @@ export class Api {
           logger.error(
             "/Velo AUTH INTERNAL FAILURE [312] " + JSON.stringify(e)
           );
-          return res
+          res
             .status(StatusCodes.INTERNAL_SERVER_ERROR)
             .send("Internal Server Error");
         }
