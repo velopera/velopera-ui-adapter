@@ -7,6 +7,7 @@ import { DeviceStatus, DeviceStatusCache } from "../types/types";
 // Map to cache the latest states of devices.
 let deviceStatusCache: Map<string, any> = new Map<string, any>();
 let deviceLoginCache: Map<string, any> = new Map<string, any>();
+let deviceGpsCache: Map<string, any> = new Map<string, any>();
 
 export class MqttController {
   private mqttService: MqttService;
@@ -30,45 +31,114 @@ export class MqttController {
     });
 
     // Subscribe to device events and update the cache.
+    // When device status, login, gps data changes, update the respective cache.
     this.devices.forEach((device, key) => {
       device.on("deviceStatus", (statusData) => {
-        try {
-          const dataToSend = {
-            imei: device.imei,
-            veloId: device.veloId,
-            statusData: statusData,
-          };
-
-          deviceStatusCache.set(key, dataToSend);
-          logger.info("Device status received:", statusData);
-          this.api.sendStatusUpdate(dataToSend);
-        } catch (error) {
-          let errorMessage = "An unexpected error occurred.";
-          if (error instanceof Error) {
-            errorMessage = error.message;
-          }
-          logger.error("Error caching device status:", errorMessage);
-        }
+        this.handleDeviceStatus(key, statusData, device.imei, device.veloId);
       });
       device.on("deviceLogin", (loginData) => {
-        try {
-          const dataToSend = {
-            imei: device.imei,
-            veloId: device.veloId,
-            loginData: loginData,
-          };
-          deviceLoginCache.set(key, dataToSend);
-          logger.info("Device Login received:", loginData);
-          this.api.sendLoginUpdate(dataToSend);
-        } catch (error) {
-          let errorMessage = "An unexpected error occurred.";
-          if (error instanceof Error) {
-            errorMessage = error.message;
-          }
-          logger.error("Error caching device status:", errorMessage);
-        }
+        this.handleDeviceLogin(key, loginData, device.imei, device.veloId);
+      });
+      device.on("deviceGps", (gpsData) => {
+        this.handleDeviceGps(key, gpsData, device.imei, device.veloId);
       });
     });
+  }
+
+    // Handle the received device status data, updating the cache.
+  private handleDeviceStatus(
+    key: string,
+    statusData: any,
+    imei: string,
+    veloId: string
+  ) {
+    // Retrieve the previous status from the cache, if available.
+    const previousStatus = deviceStatusCache.get(key);
+
+    // Create an updated status by merging the new and old data.
+    const updatedStatus = previousStatus ? { ...previousStatus.statusData } : {};
+
+    // Update only fields that are not null or undefined.
+    for (const field in statusData) {
+      if (statusData[field] !== null && statusData[field] !== undefined) {
+        updatedStatus[field] = statusData[field];
+      }
+    }
+
+    // Prepare the data to send to the uplink server.
+    const dataToSend = {
+      imei: imei || previousStatus?.imei || "Unknown",
+      veloId: veloId || previousStatus?.veloId || "Unknown",
+      statusData: updatedStatus,
+    };
+
+    // Update the cache and send the updated status to the uplink server.
+    deviceStatusCache.set(key, dataToSend);
+    this.api.sendStatusUpdate(dataToSend);
+  }
+
+  // Handle the received device login data, updating the cache.
+  private handleDeviceLogin(
+    key: string,
+    loginData: any,
+    imei: string,
+    veloId: string
+  ) {
+    // Retrieve the previous login data from the cache, if available.
+    const previousLogin = deviceLoginCache.get(key);
+
+    // Create an updated login by merging the new and old data.
+    const updatedLogin = previousLogin ? { ...previousLogin.loginData } : {};
+
+    // Update only fields that are not null or undefined.
+    for (const field in loginData) {
+      if (loginData[field] !== null && loginData[field] !== undefined) {
+        updatedLogin[field] = loginData[field];
+      }
+    }
+
+    // Prepare the data to send to the uplink server.
+    const dataToSend = {
+      imei: imei || previousLogin?.imei || "Unknown",
+      veloId: veloId || previousLogin?.veloId || "Unknown",
+      loginData: updatedLogin,
+    };
+
+    // Update the cache and send the updated login data to the uplink server.
+    deviceLoginCache.set(key, dataToSend);
+    this.api.sendLoginUpdate(dataToSend);
+  }
+
+    // Handle the received device login data, updating the cache.
+  private handleDeviceGps(
+    key: string,
+    gpsData: any,
+    imei: string,
+    veloId: string
+  ) {
+    // Retrieve the previous login data from the cache, if available.
+    const previousGps = deviceLoginCache.get(key);
+
+    // Create an updated login by merging the new and old data.
+    const updatedGps = previousGps ? { ...previousGps.gpsData } : {};
+
+    // Update only fields that are not null or undefined.
+    for (const field in gpsData) {
+      if (gpsData[field] !== null && gpsData[field] !== undefined) {
+        updatedGps[field] = gpsData[field];
+      }
+    }
+
+    // Prepare the data to send to the uplink server.
+    const dataToSend = {
+      imei: imei || previousGps?.imei || "Unknown",
+      veloId: veloId || previousGps?.veloId || "Unknown",
+      gpsData: updatedGps,
+    };
+
+    // Update the cache and send the updated login data to the uplink server.
+    deviceGpsCache.set(key, dataToSend);
+    this.api.sendGpsUpdate(dataToSend);
   }
 
   // Handles the connection event by subscribing to topics.
@@ -107,12 +177,48 @@ export const getCachedLoginMessage = (): DeviceStatusCache => {
   return obj;
 };
 
-// Function to return the cached last states of specified device
-export const getCachedMessageById = (veloId: string) => {
-  for (let [_key, value] of deviceStatusCache) {
+// Function to return the cached last gps of devices.
+export const getCachedGpsMessage = (): DeviceStatusCache => {
+  let obj = Object.create(null) as DeviceStatusCache;
+  for (let [key, value] of deviceGpsCache) {
+    obj[key] = value as DeviceStatus;
+  }
+  return obj;
+};
+
+// Function to return the cached last status, login and gps of a specified device
+export const getDeviceInfoById = (veloId: string) => {
+  let status = null;
+  let login = null;
+  let gps = null;
+
+  // Check device status cache
+  for (let [, value] of deviceStatusCache){
     if (value.veloId === veloId) {
-      return value;
+      status = value;
+      break;
     }
   }
-  return null;
-};
+
+  // Check device login cache
+  for (let [, value] of deviceLoginCache){
+    if (value.veloId === veloId){
+      login = value;
+      break;
+    }
+  }
+
+  // Check device gps cache
+  for (let [, value] of deviceGpsCache){
+    if (value.veloId === veloId) {
+      gps = value;
+      break;
+    }
+  }
+
+  return {
+    status,
+    login,
+    gps
+  }
+}

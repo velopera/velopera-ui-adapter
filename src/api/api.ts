@@ -7,9 +7,10 @@ import jwt from "jsonwebtoken";
 import { logger } from "shared-data";
 import { Server } from "socket.io";
 import {
+  getCachedGpsMessage,
   getCachedLoginMessage,
-  getCachedMessageById,
   getCachedStatusMessage,
+  getDeviceInfoById,
 } from "../controllers/MqttController";
 import { Constants, StatusCodes } from "../helpers/constants";
 import { DecodedJwtPayload } from "../types/types";
@@ -93,7 +94,7 @@ export class Api {
     });
 
     // Define API endpoint to get the last message for devices
-    this.app.get(`/ui/api/lastStatusMessage`, (req: Request, res: Response) : void => {
+    this.app.get(`/ui/api/statusMessage`, (req: Request, res: Response) : void => {
       const decoded = this.verifyToken(req) as DecodedJwtPayload;
 
       if (!decoded) {
@@ -120,7 +121,7 @@ export class Api {
     });
 
     // Define API endpoint to get the last login message for devices
-    this.app.get(`/ui/api/lastLoginMessage`, (req: Request, res: Response) : void => {
+    this.app.get(`/ui/api/loginMessage`, (req: Request, res: Response) : void => {
       const decoded = this.verifyToken(req) as DecodedJwtPayload;
 
       if (!decoded) {
@@ -150,9 +151,40 @@ export class Api {
       }
     });
 
-    // Define API endpoint to get the last message by ID
+    // Define API endpoint to get the last gps message for devices
+    this.app.get(`/ui/api/gpsMessage`, (req: Request, res: Response) : void => {
+      const decoded = this.verifyToken(req) as DecodedJwtPayload;
+
+      if (!decoded) {
+        res
+          .status(StatusCodes.UNAUTHORIZED)
+          .send("Invalid or expired token");
+      }
+
+      if (!decoded.exp || Date.now() >= decoded.exp * 1000) {
+        const link = `https://${Constants.VELOPERA_HOST}/login`;
+        logger.warn(`Session expired! Forwarding to ${link}`);
+        return res.redirect(link);
+      }
+
+      try {
+        const deviceStatus = getCachedGpsMessage();
+        if (deviceStatus) {
+          res.json(deviceStatus);
+        } else {
+          res.status(StatusCodes.NOT_FOUND).send("Device Not Found");
+        }
+      } catch (e) {
+        logger.error("/Velo AUTH INTERNAL FAILURE [312] " + JSON.stringify(e));
+        res
+          .status(StatusCodes.INTERNAL_SERVER_ERROR)
+          .send("Internal Server Error");
+      }
+    });
+
+    // Define API endpoint to get the last status, login and gps message for specified device
     this.app.get(
-      `/ui/api/lastStatusMessage/:id`,
+      `/ui/api/deviceInfo/:id`,
       (req: Request, res: Response) : void => {
         const decoded = this.verifyToken(req) as DecodedJwtPayload;
 
@@ -171,9 +203,9 @@ export class Api {
         const veloId = req.params.id;
 
         try {
-          const deviceStatus = getCachedMessageById(veloId);
-          if (deviceStatus) {
-            res.json(deviceStatus);
+          const deviceInfo = getDeviceInfoById(veloId);
+          if (deviceInfo.status || deviceInfo.login || deviceInfo.gps) {
+            res.json(deviceInfo);
           } else {
             res
               .status(StatusCodes.NOT_FOUND)
@@ -215,5 +247,10 @@ export class Api {
   sendLoginUpdate(loginData: any) {
     logger.debug("Sending login update to Socket:", loginData);
     this.io.emit("loginUpdate", loginData);
+  }
+
+  sendGpsUpdate(gpsData: any) {
+    logger.debug("Sending gps update to Socket:", gpsData);
+    this.io.emit("gpsUpdate", gpsData);
   }
 }
