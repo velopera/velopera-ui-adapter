@@ -10,6 +10,12 @@ export class Device extends MessageParser {
   }
 
   // Emit an event when parsed data is handled
+  protected handleParsedGps(data: any): void {
+    logger.debug(`||| Emitting Data Event ||| \n${JSON.stringify(data)}`);
+    this.eventEmitter.emit("deviceGps", data);
+  }
+
+  // Emit an event when parsed data is handled
   protected handleParsedStatus(data: any): void {
     logger.debug(`||| Emitting Data Event ||| \n${JSON.stringify(data)}`);
     this.eventEmitter.emit("deviceStatus", data);
