@@ -2,7 +2,7 @@ import { logger } from "shared-data";
 import { Api } from "../api/api";
 import { Device } from "../helpers/device";
 import { MqttService } from "../services/MqttService";
-import { DeviceStatus, DeviceStatusCache } from "../types/types";
+import { DeviceGps, DeviceGpsCache, DeviceLogin, DeviceLoginCache, DeviceStatus, DeviceStatusCache } from "../types/types";
 
 // Map to cache the latest states of devices.
 let deviceStatusCache: Map<string, any> = new Map<string, any>();
@@ -169,19 +169,19 @@ export const getCachedStatusMessage = (): DeviceStatusCache => {
 };
 
 // Function to return the cached last logins of devices.
-export const getCachedLoginMessage = (): DeviceStatusCache => {
-  let obj = Object.create(null) as DeviceStatusCache;
+export const getCachedLoginMessage = (): DeviceLoginCache => {
+  let obj = Object.create(null) as DeviceLoginCache;
   for (let [key, value] of deviceLoginCache) {
-    obj[key] = value as DeviceStatus;
+    obj[key] = value as DeviceLogin;
   }
   return obj;
 };
 
 // Function to return the cached last gps of devices.
-export const getCachedGpsMessage = (): DeviceStatusCache => {
-  let obj = Object.create(null) as DeviceStatusCache;
+export const getCachedGpsMessage = (): DeviceGpsCache => {
+  let obj = Object.create(null) as DeviceGpsCache;
   for (let [key, value] of deviceGpsCache) {
-    obj[key] = value as DeviceStatus;
+    obj[key] = value as DeviceGps;
   }
   return obj;
 };
