@@ -5,9 +5,9 @@ import { MqttService } from "../services/MqttService";
 import { DeviceGps, DeviceGpsCache, DeviceLogin, DeviceLoginCache, DeviceStatus, DeviceStatusCache } from "../types/types";
 
 // Map to cache the latest states of devices.
-let deviceStatusCache: Map<string, any> = new Map<string, any>();
-let deviceLoginCache: Map<string, any> = new Map<string, any>();
-let deviceGpsCache: Map<string, any> = new Map<string, any>();
+let deviceStatusCache: Map<string, DeviceStatus> = new Map<string, any>();
+let deviceLoginCache: Map<string, DeviceLogin> = new Map<string, any>();
+let deviceGpsCache: Map<string, DeviceGps> = new Map<string, any>();
 
 export class MqttController {
   private mqttService: MqttService;
@@ -65,14 +65,14 @@ export class MqttController {
       }
     }
 
-    // Prepare the data to send to the uplink server.
+    // Prepare the data to send to the api.
     const dataToSend = {
       imei: imei || previousStatus?.imei || "Unknown",
       veloId: veloId || previousStatus?.veloId || "Unknown",
       statusData: updatedStatus,
     };
 
-    // Update the cache and send the updated status to the uplink server.
+    // Update the cache and send the updated status to the api.
     deviceStatusCache.set(key, dataToSend);
     this.api.sendStatusUpdate(dataToSend);
   }
@@ -97,14 +97,14 @@ export class MqttController {
       }
     }
 
-    // Prepare the data to send to the uplink server.
+    // Prepare the data to send to the api.
     const dataToSend = {
       imei: imei || previousLogin?.imei || "Unknown",
       veloId: veloId || previousLogin?.veloId || "Unknown",
       loginData: updatedLogin,
     };
 
-    // Update the cache and send the updated login data to the uplink server.
+    // Update the cache and send the updated login data to the api.
     deviceLoginCache.set(key, dataToSend);
     this.api.sendLoginUpdate(dataToSend);
   }
@@ -117,7 +117,7 @@ export class MqttController {
     veloId: string
   ) {
     // Retrieve the previous login data from the cache, if available.
-    const previousGps = deviceLoginCache.get(key);
+    const previousGps = deviceGpsCache.get(key);
 
     // Create an updated login by merging the new and old data.
     const updatedGps = previousGps ? { ...previousGps.gpsData } : {};
@@ -129,14 +129,14 @@ export class MqttController {
       }
     }
 
-    // Prepare the data to send to the uplink server.
+    // Prepare the data to send to the api.
     const dataToSend = {
       imei: imei || previousGps?.imei || "Unknown",
       veloId: veloId || previousGps?.veloId || "Unknown",
       gpsData: updatedGps,
     };
 
-    // Update the cache and send the updated login data to the uplink server.
+    // Update the cache and send the updated login data to the api.
     deviceGpsCache.set(key, dataToSend);
     this.api.sendGpsUpdate(dataToSend);
   }
