@@ -45,7 +45,24 @@ export class MqttController {
     });
   }
 
-    // Handle the received device status data, updating the cache.
+  // Handles the connection event by subscribing to topics.
+  private onConnected() {
+    this.mqttService.subscribe("ind/#");
+    logger.debug("MQTT connected and subscribed to ind/#");
+  }
+
+  // Handles the disconnection event.
+  private onDisconnected() {
+    logger.debug("MQTT disconnected");
+  }
+
+  // Processes received MQTT messages by delegating to the corresponding device.
+  private onMessage(topic: string, payload: Buffer) {
+    let tpc = topic.split("/");
+    this.devices.get(tpc[1])?.handle(topic, payload);
+  }
+
+  // Handle the received device status data, updating the cache.
   private handleDeviceStatus(
     key: string,
     statusData: any,
@@ -109,7 +126,7 @@ export class MqttController {
     this.api.sendLoginUpdate(dataToSend);
   }
 
-    // Handle the received device login data, updating the cache.
+  // Handle the received device login data, updating the cache.
   private handleDeviceGps(
     key: string,
     gpsData: any,
@@ -139,23 +156,6 @@ export class MqttController {
     // Update the cache and send the updated login data to the api.
     deviceGpsCache.set(key, dataToSend);
     this.api.sendGpsUpdate(dataToSend);
-  }
-
-  // Handles the connection event by subscribing to topics.
-  private onConnected() {
-    this.mqttService.subscribe("ind/#");
-    logger.debug("MQTT connected and subscribed to ind/#");
-  }
-
-  // Handles the disconnection event.
-  private onDisconnected() {
-    logger.debug("MQTT disconnected");
-  }
-
-  // Processes received MQTT messages by delegating to the corresponding device.
-  private onMessage(topic: string, payload: Buffer) {
-    let tpc = topic.split("/");
-    this.devices.get(tpc[1])?.handle(topic, payload);
   }
 }
 
@@ -193,7 +193,7 @@ export const getDeviceInfoById = (veloId: string) => {
   let gps = null;
 
   // Check device status cache
-  for (let [, value] of deviceStatusCache){
+  for (let [, value] of deviceStatusCache) {
     if (value.veloId === veloId) {
       status = value;
       break;
@@ -201,15 +201,15 @@ export const getDeviceInfoById = (veloId: string) => {
   }
 
   // Check device login cache
-  for (let [, value] of deviceLoginCache){
-    if (value.veloId === veloId){
+  for (let [, value] of deviceLoginCache) {
+    if (value.veloId === veloId) {
       login = value;
       break;
     }
   }
 
   // Check device gps cache
-  for (let [, value] of deviceGpsCache){
+  for (let [, value] of deviceGpsCache) {
     if (value.veloId === veloId) {
       gps = value;
       break;

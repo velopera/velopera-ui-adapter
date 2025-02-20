@@ -64,7 +64,7 @@ export class Api {
     this.app.post(
       `/ui/api/login`,
       jsonParser,
-      (req: Request, res: Response) : void => {
+      (req: Request, res: Response): void => {
         const { username, password } = req.body;
 
         if (
@@ -85,7 +85,7 @@ export class Api {
       }
     );
 
-    this.app.post("/ui/api/logout", (_req: Request, res: Response) : void => {
+    this.app.post("/ui/api/logout", (_req: Request, res: Response): void => {
       res.clearCookie("Velo.JWT", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
@@ -94,7 +94,7 @@ export class Api {
     });
 
     // Define API endpoint to get the last message for devices
-    this.app.get(`/ui/api/statusMessage`, (req: Request, res: Response) : void => {
+    this.app.get(`/ui/api/statusMessage`, (req: Request, res: Response): void => {
       const decoded = this.verifyToken(req) as DecodedJwtPayload;
 
       if (!decoded) {
@@ -121,7 +121,7 @@ export class Api {
     });
 
     // Define API endpoint to get the last login message for devices
-    this.app.get(`/ui/api/loginMessage`, (req: Request, res: Response) : void => {
+    this.app.get(`/ui/api/loginMessage`, (req: Request, res: Response): void => {
       const decoded = this.verifyToken(req) as DecodedJwtPayload;
 
       if (!decoded) {
@@ -152,7 +152,7 @@ export class Api {
     });
 
     // Define API endpoint to get the last gps message for devices
-    this.app.get(`/ui/api/gpsMessage`, (req: Request, res: Response) : void => {
+    this.app.get(`/ui/api/gpsMessage`, (req: Request, res: Response): void => {
       const decoded = this.verifyToken(req) as DecodedJwtPayload;
 
       if (!decoded) {
@@ -185,7 +185,7 @@ export class Api {
     // Define API endpoint to get the last status, login and gps message for specified device
     this.app.get(
       `/ui/api/deviceInfo/:id`,
-      (req: Request, res: Response) : void => {
+      (req: Request, res: Response): void => {
         const decoded = this.verifyToken(req) as DecodedJwtPayload;
 
         if (!decoded) {
