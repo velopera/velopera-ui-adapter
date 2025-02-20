@@ -5,9 +5,9 @@ import { MqttService } from "../services/MqttService";
 import { DeviceGps, DeviceGpsCache, DeviceLogin, DeviceLoginCache, DeviceStatus, DeviceStatusCache } from "../types/types";
 
 // Map to cache the latest states of devices.
-let deviceStatusCache: Map<string, DeviceStatus> = new Map<string, any>();
-let deviceLoginCache: Map<string, DeviceLogin> = new Map<string, any>();
-let deviceGpsCache: Map<string, DeviceGps> = new Map<string, any>();
+let deviceStatusCache: Map<string, DeviceStatus> = new Map<string, DeviceStatus>();
+let deviceLoginCache: Map<string, DeviceLogin> = new Map<string, DeviceLogin>();
+let deviceGpsCache: Map<string, DeviceGps> = new Map<string, DeviceGps>();
 
 export class MqttController {
   private mqttService: MqttService;
