@@ -21,7 +21,7 @@
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/jsonwebtoken": "^9.0.9",
-    "@types/node": "^22.13.8",
+    "@types/node": "^22.13.10",
     "@types/ws": "^8.18.0",
     "eslint": "^9.22.0",
     "git-command-line": "^0.1.5",
