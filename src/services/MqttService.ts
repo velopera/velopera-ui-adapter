@@ -21,17 +21,11 @@ export class MqttService {
 
     // Define MQTT client event handlers
     this.client.on("error", (error: Error) => this.onBrokerError(error));
-    this.client.on("disconnect", (disconnect: mqtt.IDisconnectPacket) =>
-      this.onBrokerDisconnected(disconnect)
-    );
+    this.client.on("disconnect", (disconnect: mqtt.IDisconnectPacket) => this.onBrokerDisconnected(disconnect));
     this.client.on("reconnect", () => this.onBrokerReconnect());
     this.client.on("close", () => this.onBrokerClose());
-    this.client.once("connect", (connack: mqtt.IConnackPacket) =>
-      this.onBrokerConnected(connack)
-    );
-    this.client.on("message", (topic: string, payload: Buffer) =>
-      this.onMessage(topic, payload)
-    );
+    this.client.once("connect", (connack: mqtt.IConnackPacket) => this.onBrokerConnected(connack));
+    this.client.on("message", (topic: string, payload: Buffer) => this.onMessage(topic, payload));
   }
 
   // Publish an MQTT message
@@ -59,9 +53,7 @@ export class MqttService {
 
   // Handle MQTT disconnection event
   private onBrokerDisconnected(disconnect: mqtt.IDisconnectPacket) {
-    logger.warn(
-      "mqttBrokerDisconnected " + JSON.stringify(disconnect, null, 2)
-    );
+    logger.warn("mqttBrokerDisconnected " + JSON.stringify(disconnect, null, 2));
     this.event.emit("disconnected");
   }
 
@@ -83,9 +75,7 @@ export class MqttService {
 
   // Handle MQTT connection success event
   private async onBrokerConnected(connack: mqtt.IConnackPacket) {
-    logger.debug(
-      "Connected local mqttBroker connack: " + JSON.stringify(connack)
-    );
+    logger.debug("Connected local mqttBroker connack: " + JSON.stringify(connack));
     this.event.emit("connected");
   }
 }

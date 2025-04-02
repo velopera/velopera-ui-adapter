@@ -63,12 +63,7 @@ export class MqttController {
   }
 
   // Handle the received device status data, updating the cache.
-  private handleDeviceStatus(
-    key: string,
-    statusData: any,
-    imei: string,
-    veloId: string
-  ) {
+  private handleDeviceStatus(key: string, statusData: any, imei: string, veloId: string) {
     // Retrieve the previous status from the cache, if available.
     const previousStatus = deviceStatusCache.get(key);
 
@@ -95,12 +90,7 @@ export class MqttController {
   }
 
   // Handle the received device login data, updating the cache.
-  private handleDeviceLogin(
-    key: string,
-    loginData: any,
-    imei: string,
-    veloId: string
-  ) {
+  private handleDeviceLogin(key: string, loginData: any, imei: string, veloId: string) {
     // Retrieve the previous login data from the cache, if available.
     const previousLogin = deviceLoginCache.get(key);
 
@@ -127,12 +117,7 @@ export class MqttController {
   }
 
   // Handle the received device login data, updating the cache.
-  private handleDeviceGps(
-    key: string,
-    gpsData: any,
-    imei: string,
-    veloId: string
-  ) {
+  private handleDeviceGps(key: string, gpsData: any, imei: string, veloId: string) {
     // Retrieve the previous login data from the cache, if available.
     const previousGps = deviceGpsCache.get(key);
 

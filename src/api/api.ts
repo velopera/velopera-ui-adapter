@@ -46,9 +46,9 @@ export class Api {
     if (!token) return null;
     try {
       return jwt.verify(token, process.env.JWT_SECRET!) as DecodedJwtPayload;
-    } catch (e) {
-      if (e instanceof Error) {
-        logger.error(`Token verification failed: ${e.message}`);
+    } catch (error) {
+      if (error instanceof Error) {
+        logger.error(`Token verification failed: ${error.message}`);
       } else {
         logger.error(`Token verification failed with unknown error`);
       }
@@ -61,35 +61,22 @@ export class Api {
     this.app.use(cors());
 
     // Login route
-    this.app.post(
-      `/ui/api/login`,
-      jsonParser,
-      (req: Request, res: Response): void => {
-        const { username, password } = req.body;
+    this.app.post(`/ui/api/login`, jsonParser, (req: Request, res: Response): void => {
+      const { username, password } = req.body;
 
-        if (
-          username === process.env.USERNAME &&
-          password === process.env.PASSWORD
-        ) {
-          const user = { name: username };
-          const accessToken = jwt.sign(user, process.env.JWT_SECRET!, {
-            expiresIn: "1d",
-          });
+      if (username === process.env.USERNAME && password === process.env.PASSWORD) {
+        const user = { name: username };
+        const accessToken = jwt.sign(user, process.env.JWT_SECRET!, { expiresIn: "1d", });
 
-          res.status(StatusCodes.OK).json({ accessToken });
-        } else {
-          res
-            .status(StatusCodes.UNAUTHORIZED)
-            .send("Username or password is incorrect");
-        }
+        res.status(StatusCodes.OK).json({ accessToken });
+      } else {
+        res.status(StatusCodes.UNAUTHORIZED).send("Username or password is incorrect");
       }
+    }
     );
 
     this.app.post("/ui/api/logout", (_req: Request, res: Response): void => {
-      res.clearCookie("Velo.JWT", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-      });
+      res.clearCookie("Velo.JWT", { httpOnly: true, secure: process.env.NODE_ENV === "production", });
       res.status(StatusCodes.OK).send("Logged out successfully");
     });
 
@@ -98,9 +85,7 @@ export class Api {
       const decoded = this.verifyToken(req) as DecodedJwtPayload;
 
       if (!decoded) {
-        res
-          .status(StatusCodes.UNAUTHORIZED)
-          .send("Invalid or expired token");
+        res.status(StatusCodes.UNAUTHORIZED).send("Invalid or expired token");
       }
 
       if (!decoded.exp || Date.now() >= decoded.exp * 1000) {
@@ -112,11 +97,9 @@ export class Api {
       try {
         const allDevicesStatus = getCachedStatusMessage();
         res.json(allDevicesStatus);
-      } catch (e) {
-        logger.error("/Velo AUTH INTERNAL FAILURE [312] " + JSON.stringify(e));
-        res
-          .status(StatusCodes.INTERNAL_SERVER_ERROR)
-          .send("Internal Server Error");
+      } catch (error) {
+        logger.error("/Velo AUTH INTERNAL FAILURE [312] " + JSON.stringify(error));
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).send("Internal Server Error");
       }
     });
 
@@ -125,9 +108,7 @@ export class Api {
       const decoded = this.verifyToken(req) as DecodedJwtPayload;
 
       if (!decoded) {
-        res
-          .status(StatusCodes.UNAUTHORIZED)
-          .send("Invalid or expired token");
+        res.status(StatusCodes.UNAUTHORIZED).send("Invalid or expired token");
       }
 
       if (!decoded.exp || Date.now() >= decoded.exp * 1000) {
@@ -143,11 +124,9 @@ export class Api {
         } else {
           res.status(StatusCodes.NOT_FOUND).send("Device Not Found");
         }
-      } catch (e) {
-        logger.error("/Velo AUTH INTERNAL FAILURE [312] " + JSON.stringify(e));
-        res
-          .status(StatusCodes.INTERNAL_SERVER_ERROR)
-          .send("Internal Server Error");
+      } catch (error) {
+        logger.error("/Velo AUTH INTERNAL FAILURE [312] " + JSON.stringify(error));
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).send("Internal Server Error");
       }
     });
 
@@ -156,9 +135,7 @@ export class Api {
       const decoded = this.verifyToken(req) as DecodedJwtPayload;
 
       if (!decoded) {
-        res
-          .status(StatusCodes.UNAUTHORIZED)
-          .send("Invalid or expired token");
+        res.status(StatusCodes.UNAUTHORIZED).send("Invalid or expired token");
       }
 
       if (!decoded.exp || Date.now() >= decoded.exp * 1000) {
@@ -174,52 +151,40 @@ export class Api {
         } else {
           res.status(StatusCodes.NOT_FOUND).send("Device Not Found");
         }
-      } catch (e) {
-        logger.error("/Velo AUTH INTERNAL FAILURE [312] " + JSON.stringify(e));
-        res
-          .status(StatusCodes.INTERNAL_SERVER_ERROR)
-          .send("Internal Server Error");
+      } catch (error) {
+        logger.error("/Velo AUTH INTERNAL FAILURE [312] " + JSON.stringify(error));
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).send("Internal Server Error");
       }
     });
 
     // Define API endpoint to get the last status, login and gps message for specified device
-    this.app.get(
-      `/ui/api/deviceInfo/:id`,
-      (req: Request, res: Response): void => {
-        const decoded = this.verifyToken(req) as DecodedJwtPayload;
+    this.app.get(`/ui/api/deviceInfo/:id`, (req: Request, res: Response): void => {
+      const decoded = this.verifyToken(req) as DecodedJwtPayload;
 
-        if (!decoded) {
-          res
-            .status(StatusCodes.UNAUTHORIZED)
-            .send("Invalid or expired token");
-        }
-
-        if (!decoded.exp || Date.now() >= decoded.exp * 1000) {
-          const link = `https://${Constants.VELOPERA_HOST}/login`;
-          logger.warn(`Session expired! Forwarding to ${link}`);
-          return res.redirect(link);
-        }
-
-        const veloId = req.params.id;
-
-        try {
-          const deviceInfo = getDeviceInfoById(veloId);
-          if (deviceInfo.status || deviceInfo.login || deviceInfo.gps) {
-            res.json(deviceInfo);
-          } else {
-            res
-              .status(StatusCodes.NOT_FOUND)
-              .send("No device found with the specified Id");
-          }
-        } catch (e) {
-          logger.error(
-            "/Velo AUTH INTERNAL FAILURE [312] " + JSON.stringify(e)
-          );
-          res
-            .status(StatusCodes.INTERNAL_SERVER_ERROR)
-            .send("Internal Server Error");
-        }
+      if (!decoded) {
+        res.status(StatusCodes.UNAUTHORIZED).send("Invalid or expired token");
       }
+
+      if (!decoded.exp || Date.now() >= decoded.exp * 1000) {
+        const link = `https://${Constants.VELOPERA_HOST}/login`;
+        logger.warn(`Session expired! Forwarding to ${link}`);
+        return res.redirect(link);
+      }
+
+      const veloId = req.params.id;
+
+      try {
+        const deviceInfo = getDeviceInfoById(veloId);
+        if (deviceInfo.status || deviceInfo.login || deviceInfo.gps) {
+          res.json(deviceInfo);
+        } else {
+          res.status(StatusCodes.NOT_FOUND).send("No device found with the specified Id");
+        }
+      } catch (error) {
+        logger.error("/Velo AUTH INTERNAL FAILURE [312] " + JSON.stringify(error));
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).send("Internal Server Error");
+      }
+    }
     );
 
     // Start the HTTP server and listen on the designated port
