@@ -12,7 +12,7 @@ import {
   getCachedStatusMessage,
   getDeviceInfoById,
 } from "../controllers/MqttController";
-import { Constants, StatusCodes } from "../helpers/constants";
+import { StatusCodes } from "../helpers/constants";
 import { DecodedJwtPayload } from "../types/types";
 
 const jsonParser = bodyParser.json();
@@ -89,7 +89,7 @@ export class Api {
       }
 
       if (!decoded.exp || Date.now() >= decoded.exp * 1000) {
-        const link = `https://${Constants.VELOPERA_HOST}/login`;
+        const link = `https://${process.env.VELOPERA_HOST}/login`;
         logger.warn(`Session expired! Forwarding to ${link}`);
         return res.redirect(link);
       }
@@ -112,7 +112,7 @@ export class Api {
       }
 
       if (!decoded.exp || Date.now() >= decoded.exp * 1000) {
-        const link = `https://${Constants.VELOPERA_HOST}/login`;
+        const link = `https://${process.env.VELOPERA_HOST}/login`;
         logger.warn(`Session expired! Forwarding to ${link}`);
         return res.redirect(link);
       }
@@ -139,7 +139,7 @@ export class Api {
       }
 
       if (!decoded.exp || Date.now() >= decoded.exp * 1000) {
-        const link = `https://${Constants.VELOPERA_HOST}/login`;
+        const link = `https://${process.env.VELOPERA_HOST}/login`;
         logger.warn(`Session expired! Forwarding to ${link}`);
         return res.redirect(link);
       }
@@ -166,7 +166,7 @@ export class Api {
       }
 
       if (!decoded.exp || Date.now() >= decoded.exp * 1000) {
-        const link = `https://${Constants.VELOPERA_HOST}/login`;
+        const link = `https://${process.env.VELOPERA_HOST}/login`;
         logger.warn(`Session expired! Forwarding to ${link}`);
         return res.redirect(link);
       }
