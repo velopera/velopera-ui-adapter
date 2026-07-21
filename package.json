@@ -23,7 +23,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^26.1.1",
     "@types/ws": "^8.18.1",
-    "@typescript-eslint/eslint-plugin": "^8.62.0",
+    "@typescript-eslint/eslint-plugin": "^8.65.0",
     "@typescript-eslint/parser": "^8.61.1",
     "eslint": "^10.7.0",
     "fs-extra": "^11.3.6",
